@@ -50,18 +50,14 @@ async def _run_generation(task_id: str) -> None:
     try:
         async with _generation_semaphore:
             task.status = "in_progress"
-            task.stage = "extracting"
             task.output_url = await run_in_threadpool(
                 generate_archive,
                 task.zip_path,
                 task.filename,
-                lambda stage: setattr(task, "stage", stage),
             )
             task.status = "completed"
-            task.stage = "completed"
     except Exception as exc:
         task.status = "failed"
-        task.stage = "failed"
         task.error = str(exc) or "生成失败"
     finally:
         Path(task.zip_path).unlink(missing_ok=True)

@@ -5,37 +5,68 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>软著代码生成系统</title>
   <style>
-    :root { color-scheme: dark; --bg:#10131a; --card:#191e29; --line:#30384b; --primary:#6c83ff; --text:#edf1ff; --muted:#a5afc5; --error:#ff8991; }
+    :root { color-scheme:dark; --bg:#0c1019; --surface:#171e2c; --surface-2:#1d2638; --line:#303c55; --primary:#7188ff; --text:#edf2ff; --muted:#9aa7c1; --success:#40d5a0; --warning:#f5b84b; --danger:#ff7e91; }
     * { box-sizing:border-box; }
-    body { margin:0; min-height:100vh; display:grid; place-items:center; padding:24px; background:radial-gradient(circle at top,#202c50 0,var(--bg) 48%); color:var(--text); font:15px/1.5 "Segoe UI",sans-serif; }
-    main { width:min(100%,620px); }
-    h1 { margin:0; font-size:28px; }
-    .subtitle { margin:8px 0 24px; color:var(--muted); }
-    .card { padding:28px; border:1px solid var(--line); border-radius:16px; background:rgba(25,30,41,.94); box-shadow:0 24px 70px rgba(0,0,0,.25); }
-    .drop-zone { display:block; padding:36px 20px; border:2px dashed var(--line); border-radius:12px; text-align:center; cursor:pointer; transition:.2s; }
-    .drop-zone:hover,.drop-zone.active { border-color:var(--primary); background:rgba(108,131,255,.08); }
+    body { min-height:100vh; margin:0; padding:36px 20px; background:radial-gradient(800px 480px at 50% -10%,#253a72 0%,transparent 70%),var(--bg); color:var(--text); font:15px/1.5 "Segoe UI",sans-serif; }
+    main { width:min(100%,760px); margin:auto; }
+    h1 { margin:0; font-size:30px; letter-spacing:-.5px; }
+    .subtitle { margin:8px 0 26px; color:var(--muted); }
+    .panel { padding:26px; border:1px solid var(--line); border-radius:18px; background:rgba(23,30,44,.92); box-shadow:0 24px 70px rgba(0,0,0,.24); }
+    .drop-zone { display:block; padding:34px 20px; border:2px dashed #435170; border-radius:14px; text-align:center; cursor:pointer; transition:.2s; }
+    .drop-zone:hover,.drop-zone.active { border-color:var(--primary); background:rgba(113,136,255,.1); transform:translateY(-1px); }
+    .upload-icon { display:block; margin-bottom:8px; font-size:28px; }
+    .drop-zone span { color:var(--muted); font-size:13px; }
     input { display:none; }
-    .file-name { min-height:24px; margin:14px 0; color:var(--muted); word-break:break-all; }
-    button { width:100%; border:0; border-radius:10px; padding:13px 16px; background:var(--primary); color:white; font:inherit; font-weight:700; cursor:pointer; }
-    button:disabled { cursor:not-allowed; opacity:.5; }
-    .result { display:none; margin-top:20px; padding:14px; border-radius:10px; background:#111722; }
-    .result.error { color:var(--error); }
-    .result a { color:#aebcff; font-weight:700; }
+    .file-name { min-height:24px; margin:14px 2px; color:var(--muted); word-break:break-all; }
+    .primary-button,.download-button { border:0; border-radius:10px; padding:13px 16px; font:inherit; font-weight:700; cursor:pointer; transition:.2s; }
+    .primary-button { width:100%; background:linear-gradient(135deg,#768dff,#5d6fec); color:white; box-shadow:0 8px 24px rgba(94,113,236,.26); }
+    .primary-button:hover:not(:disabled) { transform:translateY(-1px); filter:brightness(1.08); }
+    button:disabled { cursor:not-allowed; opacity:.52; }
+    .result { display:none; margin-top:20px; }
+    .result.error { padding:13px 15px; border:1px solid rgba(255,126,145,.35); border-radius:12px; background:rgba(255,126,145,.08); color:var(--danger); }
+    .task-summary { margin:0 0 12px; color:var(--muted); font-size:13px; }
+    .task-list { display:grid; gap:10px; }
+    .task { position:relative; overflow:hidden; display:grid; grid-template-columns:38px minmax(0,1fr) auto; gap:12px; align-items:center; padding:15px; border:1px solid var(--line); border-radius:14px; background:var(--surface-2); transition:.25s; }
+    .task.active { border-color:rgba(113,136,255,.7); box-shadow:0 0 0 1px rgba(113,136,255,.1),0 10px 28px rgba(43,61,126,.18); }
+    .task.completed { border-color:rgba(64,213,160,.55); }
+    .task.failed { border-color:rgba(255,126,145,.5); }
+    .task-icon { width:38px; height:38px; display:grid; place-items:center; border-radius:11px; background:#28344d; font-size:18px; }
+    .task.completed .task-icon { background:rgba(64,213,160,.16); color:var(--success); }
+    .task.failed .task-icon { background:rgba(255,126,145,.16); color:var(--danger); }
+    .task-name { overflow:hidden; color:var(--text); font-weight:650; text-overflow:ellipsis; white-space:nowrap; }
+    .task-detail { margin-top:3px; color:var(--muted); font-size:12px; }
+    .badge { display:inline-flex; align-items:center; gap:6px; min-width:76px; justify-content:center; padding:5px 9px; border-radius:99px; font-size:12px; font-weight:700; }
+    .badge.pending { background:rgba(245,184,75,.13); color:var(--warning); }
+    .badge.running { background:rgba(113,136,255,.14); color:#aebaff; }
+    .badge.completed { background:rgba(64,213,160,.14); color:var(--success); }
+    .badge.failed { background:rgba(255,126,145,.14); color:var(--danger); }
+    .dot { width:7px; height:7px; border-radius:50%; background:currentColor; }
+    .pulse { animation:pulse 1.15s infinite ease-in-out; }
+    @keyframes pulse { 50% { opacity:.25; transform:scale(.75); } }
+    .shimmer { position:absolute; right:0; bottom:0; left:0; height:3px; overflow:hidden; background:#2a344a; }
+    .shimmer::after { content:""; position:absolute; width:36%; height:100%; background:linear-gradient(90deg,transparent,#91a1ff,transparent); animation:slide 1.5s infinite linear; }
+    @keyframes slide { from { transform:translateX(-120%); } to { transform:translateX(380%); } }
+    .task:not(.active) .shimmer { display:none; }
+    .download-button { padding:7px 11px; background:rgba(64,213,160,.16); color:var(--success); text-decoration:none; font-size:12px; }
+    .download-button:hover { background:rgba(64,213,160,.25); }
+    .task-error { grid-column:2 / -1; color:var(--danger); font-size:12px; line-height:1.45; word-break:break-word; }
+    @media (max-width:560px) { body { padding:22px 14px; } .panel { padding:18px; } .task { grid-template-columns:34px minmax(0,1fr); } .badge,.download-button { grid-column:2; justify-self:start; } }
   </style>
 </head>
 <body>
   <main>
     <h1>软著代码生成系统</h1>
     <p class="subtitle">上传包含软件说明书、软件代码模板和系统填报说明的 ZIP 文件。</p>
-    <section class="card">
+    <section class="panel">
       <label class="drop-zone" id="dropZone" for="fileInput">
+        <span class="upload-icon">📦</span>
         <strong>选择或拖入 ZIP 文件</strong><br>
         <span>系统将自动生成代码、Word 文档和最终压缩包</span>
       </label>
       <input id="fileInput" type="file" accept=".zip,application/zip" multiple>
       <div class="file-name" id="fileName">尚未选择文件</div>
-      <button id="submitButton" disabled>开始生成</button>
-      <div class="result" id="result"></div>
+      <button class="primary-button" id="submitButton" disabled>开始生成</button>
+      <section class="result" id="result"></section>
     </section>
   </main>
   <script>
@@ -48,7 +79,7 @@
 
     function setFiles(files) {
       selectedFiles = Array.from(files).filter(file => file.name.toLowerCase().endsWith('.zip'));
-      fileName.textContent = selectedFiles.length ? selectedFiles.map(file => file.name).join('、') : '请选择 ZIP 文件';
+      fileName.textContent = selectedFiles.length ? `已选择 ${selectedFiles.length} 个文件：${selectedFiles.map(file => file.name).join('、')}` : '请选择 ZIP 文件';
       button.disabled = !selectedFiles.length;
     }
 
@@ -60,10 +91,10 @@
     button.addEventListener('click', async () => {
       if (!selectedFiles.length) return;
       button.disabled = true;
-      button.textContent = '正在生成，请耐心等待…';
+      button.textContent = '正在提交任务…';
       result.style.display = 'block';
       result.className = 'result';
-      result.textContent = '任务已提交，正在等待处理。';
+      result.replaceChildren();
       const formData = new FormData();
       selectedFiles.forEach(file => formData.append('files', file));
       try {
@@ -72,39 +103,85 @@
         let data = {};
         try { data = JSON.parse(body); } catch { data = { detail: body || '服务响应异常' }; }
         if (!response.ok) throw new Error(data.detail || '生成失败');
-        result.innerHTML = '';
-        data.task_ids.forEach((taskId, index) => addTask(taskId, selectedFiles[index].name));
+        const summary = document.createElement('p');
+        summary.className = 'task-summary';
+        summary.textContent = `已提交 ${data.task_ids.length} 个任务，最多同时生成 5 个。`;
+        const list = document.createElement('div');
+        list.className = 'task-list';
+        result.append(summary, list);
+        data.task_ids.forEach((taskId, index) => addTask(list, taskId, selectedFiles[index].name));
       } catch (error) {
         result.className = 'result error';
-        result.textContent = `生成失败：${error.message}`;
+        result.textContent = `提交失败：${error.message}`;
       } finally {
         button.disabled = !selectedFiles.length;
         button.textContent = '开始生成';
       }
     });
 
-    function addTask(taskId, filename) {
-      const item = document.createElement('div');
-      item.style.cssText = 'padding:10px 0;border-bottom:1px solid #30384b;word-break:break-all;';
-      item.textContent = `${filename}：等待中`;
-      result.appendChild(item);
+    function addTask(list, taskId, filename) {
+      const item = document.createElement('article');
+      item.className = 'task';
+      const icon = document.createElement('div');
+      icon.className = 'task-icon';
+      icon.textContent = '📦';
+      const content = document.createElement('div');
+      const title = document.createElement('div');
+      title.className = 'task-name';
+      title.title = filename;
+      title.textContent = filename;
+      const detail = document.createElement('div');
+      detail.className = 'task-detail';
+      content.append(title, detail);
+      const badge = document.createElement('div');
+      const shimmer = document.createElement('div');
+      shimmer.className = 'shimmer';
+      item.append(icon, content, badge, shimmer);
+      list.appendChild(item);
+
+      function render(status, error, outputUrl) {
+        item.className = `task ${status === 'in_progress' ? 'active' : status}`;
+        badge.className = `badge ${status === 'in_progress' ? 'running' : status}`;
+        badge.replaceChildren();
+        if (status === 'pending') {
+          badge.innerHTML = '<span class="dot pulse"></span>等待中';
+          detail.textContent = '正在等待可用生成名额';
+        } else if (status === 'in_progress') {
+          badge.innerHTML = '<span class="dot pulse"></span>生成中';
+          detail.textContent = 'Deep Agent 正在生成核心代码模块';
+        } else if (status === 'completed') {
+          icon.textContent = '✓';
+          badge.innerHTML = '<span class="dot"></span>已完成';
+          detail.textContent = '软著材料已生成，可下载保存';
+          const download = document.createElement('a');
+          download.className = 'download-button';
+          download.href = outputUrl;
+          download.download = '';
+          download.textContent = '下载 ZIP';
+          item.appendChild(download);
+        } else {
+          icon.textContent = '!';
+          badge.innerHTML = '<span class="dot"></span>失败';
+          detail.textContent = '任务未能完成';
+          if (error) {
+            const message = document.createElement('div');
+            message.className = 'task-error';
+            message.textContent = error;
+            item.appendChild(message);
+          }
+        }
+      }
+
+      render('pending');
       const timer = setInterval(async () => {
         try {
           const response = await fetch(`/generate/${taskId}`);
           const data = await response.json();
-          const labels = { queued: '等待中', extracting: '解压材料中', generating: '生成代码中', packaging: '构建文档中', completed: '完成', failed: '失败' };
-          if (data.status === 'completed') {
-            clearInterval(timer);
-            item.innerHTML = `${filename}：完成，<a href="${data.output_url}" download>下载 ZIP</a>`;
-          } else if (data.status === 'failed') {
-            clearInterval(timer);
-            item.textContent = `${filename}：失败：${data.error || '未知错误'}`;
-            item.style.color = '#ff8991';
-          } else {
-            item.textContent = `${filename}：${labels[data.stage] || '处理中'}`;
-          }
+          render(data.status, data.error, data.output_url);
+          if (data.status === 'completed' || data.status === 'failed') clearInterval(timer);
         } catch {
-          item.textContent = `${filename}：状态查询失败`;
+          render('failed', '状态查询失败，请刷新页面后重试。');
+          clearInterval(timer);
         }
       }, 3000);
     }

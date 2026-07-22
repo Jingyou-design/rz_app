@@ -10,6 +10,5 @@ class GenerationTask(BaseModel):
     filename: str = Field(..., description="用户上传的 ZIP 文件名")
     zip_path: str = Field(..., exclude=True, description="上传 ZIP 的临时保存路径")
     status: str = Field(default="pending", description="任务状态")
-    stage: str = Field(default="queued", description="当前处理阶段")
     output_url: str | None = Field(default=None, description="生成结果 ZIP 下载地址")
     error: str | None = Field(default=None, description="失败原因")
