@@ -27,6 +27,7 @@
     .task-summary { margin:0 0 12px; color:var(--muted); font-size:13px; }
     .task-list { display:grid; gap:10px; }
     .task { position:relative; overflow:hidden; display:grid; grid-template-columns:38px minmax(0,1fr) auto; gap:12px; align-items:center; padding:15px; border:1px solid var(--line); border-radius:14px; background:var(--surface-2); transition:.25s; }
+    .task-actions { display:flex; align-items:center; gap:9px; }
     .task.active { border-color:rgba(113,136,255,.7); box-shadow:0 0 0 1px rgba(113,136,255,.1),0 10px 28px rgba(43,61,126,.18); }
     .task.completed { border-color:rgba(64,213,160,.55); }
     .task.failed { border-color:rgba(255,126,145,.5); }
@@ -47,10 +48,10 @@
     .shimmer::after { content:""; position:absolute; width:36%; height:100%; background:linear-gradient(90deg,transparent,#91a1ff,transparent); animation:slide 1.5s infinite linear; }
     @keyframes slide { from { transform:translateX(-120%); } to { transform:translateX(380%); } }
     .task:not(.active) .shimmer { display:none; }
-    .download-button { padding:7px 11px; background:rgba(64,213,160,.16); color:var(--success); text-decoration:none; font-size:12px; }
+    .download-button { padding:7px 11px; background:rgba(64,213,160,.16); color:var(--success); text-decoration:none; font-size:12px; white-space:nowrap; }
     .download-button:hover { background:rgba(64,213,160,.25); }
     .task-error { grid-column:2 / -1; color:var(--danger); font-size:12px; line-height:1.45; word-break:break-word; }
-    @media (max-width:560px) { body { padding:22px 14px; } .panel { padding:18px; } .task { grid-template-columns:34px minmax(0,1fr); } .badge,.download-button { grid-column:2; justify-self:start; } }
+    @media (max-width:560px) { body { padding:22px 14px; } .panel { padding:18px; } .task { grid-template-columns:34px minmax(0,1fr); } .task-actions { grid-column:2; justify-self:start; } }
   </style>
 </head>
 <body>
@@ -133,10 +134,13 @@
       const detail = document.createElement('div');
       detail.className = 'task-detail';
       content.append(title, detail);
+      const actions = document.createElement('div');
+      actions.className = 'task-actions';
       const badge = document.createElement('div');
+      actions.appendChild(badge);
       const shimmer = document.createElement('div');
       shimmer.className = 'shimmer';
-      item.append(icon, content, badge, shimmer);
+      item.append(icon, content, actions, shimmer);
       list.appendChild(item);
 
       function render(status, error, outputUrl) {
@@ -158,7 +162,7 @@
           download.href = outputUrl;
           download.download = '';
           download.textContent = '下载 ZIP';
-          item.appendChild(download);
+          actions.appendChild(download);
         } else {
           icon.textContent = '!';
           badge.innerHTML = '<span class="dot"></span>失败';
