@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>软著代码生成系统</title>
+  <style>
+    :root { color-scheme: dark; --bg:#10131a; --card:#191e29; --line:#30384b; --primary:#6c83ff; --text:#edf1ff; --muted:#a5afc5; --error:#ff8991; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; display:grid; place-items:center; padding:24px; background:radial-gradient(circle at top,#202c50 0,var(--bg) 48%); color:var(--text); font:15px/1.5 "Segoe UI",sans-serif; }
+    main { width:min(100%,620px); }
+    h1 { margin:0; font-size:28px; }
+    .subtitle { margin:8px 0 24px; color:var(--muted); }
+    .card { padding:28px; border:1px solid var(--line); border-radius:16px; background:rgba(25,30,41,.94); box-shadow:0 24px 70px rgba(0,0,0,.25); }
+    .drop-zone { display:block; padding:36px 20px; border:2px dashed var(--line); border-radius:12px; text-align:center; cursor:pointer; transition:.2s; }
+    .drop-zone:hover,.drop-zone.active { border-color:var(--primary); background:rgba(108,131,255,.08); }
+    input { display:none; }
+    .file-name { min-height:24px; margin:14px 0; color:var(--muted); word-break:break-all; }
+    button { width:100%; border:0; border-radius:10px; padding:13px 16px; background:var(--primary); color:white; font:inherit; font-weight:700; cursor:pointer; }
+    button:disabled { cursor:not-allowed; opacity:.5; }
+    .result { display:none; margin-top:20px; padding:14px; border-radius:10px; background:#111722; }
+    .result.error { color:var(--error); }
+    .result a { color:#aebcff; font-weight:700; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>软著代码生成系统</h1>
+    <p class="subtitle">上传包含软件说明书、软件代码模板和系统填报说明的 ZIP 文件。</p>
+    <section class="card">
+      <label class="drop-zone" id="dropZone" for="fileInput">
+        <strong>选择或拖入 ZIP 文件</strong><br>
+        <span>系统将自动生成代码、Word 文档和最终压缩包</span>
+      </label>
+      <input id="fileInput" type="file" accept=".zip,application/zip" multiple>
+      <div class="file-name" id="fileName">尚未选择文件</div>
+      <button id="submitButton" disabled>开始生成</button>
+      <div class="result" id="result"></div>
+    </section>
+  </main>
+  <script>
+    const input = document.getElementById('fileInput');
+    const dropZone = document.getElementById('dropZone');
+    const fileName = document.getElementById('fileName');
+    const button = document.getElementById('submitButton');
+    const result = document.getElementById('result');
+    let selectedFiles = [];
+
+    function setFiles(files) {
+      selectedFiles = Array.from(files).filter(file => file.name.toLowerCase().endsWith('.zip'));
+      fileName.textContent = selectedFiles.length ? selectedFiles.map(file => file.name).join('、') : '请选择 ZIP 文件';
+      button.disabled = !selectedFiles.length;
+    }
+
+    input.addEventListener('change', () => setFiles(input.files));
+    ['dragenter', 'dragover'].forEach(event => dropZone.addEventListener(event, value => { value.preventDefault(); dropZone.classList.add('active'); }));
+    ['dragleave', 'drop'].forEach(event => dropZone.addEventListener(event, value => { value.preventDefault(); dropZone.classList.remove('active'); }));
+    dropZone.addEventListener('drop', event => setFiles(event.dataTransfer.files));
+
+    button.addEventListener('click', async () => {
+      if (!selectedFiles.length) return;
+      button.disabled = true;
+      button.textContent = '正在生成，请耐心等待…';
+      result.style.display = 'block';
+      result.className = 'result';
+      result.textContent = '任务已提交，正在等待处理。';
+      const formData = new FormData();
+      selectedFiles.forEach(file => formData.append('files', file));
+      try {
+        const response = await fetch('/generate', { method: 'POST', body: formData });
+        const body = await response.text();
+        let data = {};
+        try { data = JSON.parse(body); } catch { data = { detail: body || '服务响应异常' }; }
+        if (!response.ok) throw new Error(data.detail || '生成失败');
+        result.innerHTML = '';
+        data.task_ids.forEach((taskId, index) => addTask(taskId, selectedFiles[index].name));
+      } catch (error) {
+        result.className = 'result error';
+        result.textContent = `生成失败：${error.message}`;
+      } finally {
+        button.disabled = !selectedFiles.length;
+        button.textContent = '开始生成';
+      }
+    });
+
+    function addTask(taskId, filename) {
+      const item = document.createElement('div');
+      item.style.cssText = 'padding:10px 0;border-bottom:1px solid #30384b;word-break:break-all;';
+      item.textContent = `${filename}：等待中`;
+      result.appendChild(item);
+      const timer = setInterval(async () => {
+        try {
+          const response = await fetch(`/generate/${taskId}`);
+          const data = await response.json();
+          const labels = { queued: '等待中', extracting: '解压材料中', generating: '生成代码中', packaging: '构建文档中', completed: '完成', failed: '失败' };
+          if (data.status === 'completed') {
+            clearInterval(timer);
+            item.innerHTML = `${filename}：完成，<a href="${data.output_url}" download>下载 ZIP</a>`;
+          } else if (data.status === 'failed') {
+            clearInterval(timer);
+            item.textContent = `${filename}：失败：${data.error || '未知错误'}`;
+            item.style.color = '#ff8991';
+          } else {
+            item.textContent = `${filename}：${labels[data.stage] || '处理中'}`;
+          }
+        } catch {
+          item.textContent = `${filename}：状态查询失败`;
+        }
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

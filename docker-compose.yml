@@ -1,0 +1,12 @@
+services:
+  rz-app:
+    build: .
+    container_name: rz-app
+    ports:
+      - "8020:8020"
+    env_file:
+      - .env
+    volumes:
+      - ./outputs:/app/outputs
+      - ./uploads:/app/uploads
+    restart: unless-stopped
