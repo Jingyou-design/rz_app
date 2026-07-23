@@ -18,6 +18,6 @@ COPY static ./static
 
 RUN mkdir -p uploads outputs temp
 
-EXPOSE 8001
+EXPOSE 8020
 
-CMD ["/app/.venv/bin/python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]
+CMD ["/app/.venv/bin/python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8020"]
