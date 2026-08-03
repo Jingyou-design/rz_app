@@ -16,7 +16,7 @@ class Settings(BaseSettings):
         description="DeepSeek API 地址",
     )
     deepseek_model: str = Field(
-        default="deepseek-v4-flash",
+        default="deepseek-v4-pro",
         validation_alias="DEEPSEEK_MODEL",
         description="DeepSeek 模型名称",
     )
