@@ -21,6 +21,7 @@
     .primary-button,.download-button { border:0; border-radius:10px; padding:13px 16px; font:inherit; font-weight:700; cursor:pointer; transition:.2s; }
     .primary-button { width:100%; background:linear-gradient(135deg,#768dff,#5d6fec); color:white; box-shadow:0 8px 24px rgba(94,113,236,.26); }
     .primary-button:hover:not(:disabled) { transform:translateY(-1px); filter:brightness(1.08); }
+    .generation-note { margin:12px 0 0; color:var(--warning); font-size:13px; text-align:center; }
     button:disabled { cursor:not-allowed; opacity:.52; }
     .result { display:none; margin-top:20px; }
     .result.error { padding:13px 15px; border:1px solid rgba(255,126,145,.35); border-radius:12px; background:rgba(255,126,145,.08); color:var(--danger); }
@@ -67,6 +68,7 @@
       <input id="fileInput" type="file" accept=".zip,application/zip" multiple>
       <div class="file-name" id="fileName">尚未选择文件</div>
       <button class="primary-button" id="submitButton" disabled>开始生成</button>
+      <p class="generation-note">本次生成可能至少十分钟以上。生成越慢，质量越好！</p>
       <section class="result" id="result"></section>
     </section>
   </main>
