@@ -5,7 +5,7 @@ import shutil
 from app.config.settings import settings
 from deepagents import FilesystemPermission, create_deep_agent
 from deepagents.backends import FilesystemBackend
-from langchain_deepseek import ChatDeepSeek
+from langchain_openai import ChatOpenAI
 from langgraph.errors import GraphRecursionError
 
 
@@ -19,11 +19,11 @@ def code_agent_workflow(specification_text: str, workspace_path: str) -> None:
     skill_directory = workspace / SKILL_DIRECTORY_NAME
     shutil.copytree(SKILLS_SOURCE_DIR, skill_directory)
     logger.info("Deep Agent Skill 已载入，准备调用模型")
-    model = ChatDeepSeek(
-        model=settings.deepseek_model,
-        api_key=settings.deepseek_api_key,
-        base_url=settings.deepseek_base_url,
-        temperature=settings.deepseek_temperature,
+    model = ChatOpenAI(
+        model=settings.local_llm_model,
+        api_key=settings.local_llm_api_key,
+        base_url=settings.local_llm_base_url,
+        temperature=settings.local_llm_temperature,
     )
     agent = create_deep_agent(
         model=model,
