@@ -50,8 +50,8 @@ def code_agent_workflow(specification_text: str, workspace_path: str) -> None:
     try:
         agent.invoke(
             {"messages": [{"role": "user", "content": f"完整软件说明书：\n{specification_text}"}]},
-            {"recursion_limit": 100, "run_name": "software_code_generation"},
+            {"recursion_limit": 200, "run_name": "software_code_generation"},
         )
     except GraphRecursionError as exc:
-        raise ValueError("代码生成超过 100 个执行轮次仍未完成，请调整生成 Skill") from exc
+        raise ValueError("代码生成超过 200 个执行轮次仍未完成，请调整生成 Skill") from exc
     logger.info("Deep Agent 已返回")
